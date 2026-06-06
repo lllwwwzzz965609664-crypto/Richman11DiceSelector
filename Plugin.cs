@@ -20,7 +20,11 @@ namespace Richman11DiceSelector
         private static int pendingPoint;
         private static float pendingUntil;
         private static bool pluginEnabled = true;
-        private static Rect windowRect = new Rect(20f, 80f, 320f, 110f);
+        private static Rect windowRect = new Rect(20f, 80f, 340f, 135f);
+        private static bool showWindow = false;
+        private static bool speedEnabled = true;
+        private static float speedMultiplier = 1.8f;
+        private static float originalFixedDeltaTime;
 
         private static Type battleMgrType;
         private static FieldInfo instanceField;
@@ -33,6 +37,8 @@ namespace Richman11DiceSelector
         {
             LogRef = Logger;
             LogRef.LogInfo("Richman11DiceSelector loaded successfully.");
+            originalFixedDeltaTime = Time.fixedDeltaTime;
+            ApplySpeedScale();
 
             harmony = new Harmony(PluginGuid);
             if (!TryInstallPatch())
@@ -47,11 +53,14 @@ namespace Richman11DiceSelector
             {
                 harmony.UnpatchSelf();
             }
+
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = originalFixedDeltaTime;
         }
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Alpha0) || Input.GetKeyDown(KeyCode.Keypad0))
+            if (Input.GetKeyDown(KeyCode.BackQuote))
             {
                 ClearPending("user cleared selection");
                 return;
@@ -59,15 +68,34 @@ namespace Richman11DiceSelector
 
             for (int i = 1; i <= 6; i++)
             {
-                KeyCode top = (KeyCode)((int)KeyCode.Alpha0 + i);
-                KeyCode pad = (KeyCode)((int)KeyCode.Keypad0 + i);
-                if (Input.GetKeyDown(top) || Input.GetKeyDown(pad))
+                KeyCode key = (KeyCode)((int)KeyCode.F1 + i - 1);
+                if (Input.GetKeyDown(key))
                 {
                     pendingPoint = i;
                     pendingUntil = Time.realtimeSinceStartup + 10f;
                     LogRef.LogInfo("User selected next dice point: " + i + " (valid for 10 seconds).");
                     return;
                 }
+            }
+
+            if (Input.GetKeyDown(KeyCode.F7))
+            {
+                SetSpeed(speedMultiplier - 0.25f);
+            }
+            else if (Input.GetKeyDown(KeyCode.F8))
+            {
+                SetSpeed(speedMultiplier + 0.25f);
+            }
+            else if (Input.GetKeyDown(KeyCode.F9))
+            {
+                speedEnabled = !speedEnabled;
+                ApplySpeedScale();
+                LogRef.LogInfo("Speed boost " + (speedEnabled ? "enabled" : "disabled") + "; multiplier x" + FormatSpeed(speedMultiplier) + ".");
+            }
+            else if (Input.GetKeyDown(KeyCode.F10))
+            {
+                showWindow = !showWindow;
+                LogRef.LogInfo("Status window " + (showWindow ? "shown" : "hidden") + ".");
             }
 
             if (pendingPoint != 0 && Time.realtimeSinceStartup > pendingUntil)
@@ -78,6 +106,11 @@ namespace Richman11DiceSelector
 
         private void OnGUI()
         {
+            if (!showWindow)
+            {
+                return;
+            }
+
             windowRect = GUI.Window(912611, windowRect, DrawWindow, "Richman11 Dice Selector");
         }
 
@@ -85,7 +118,10 @@ namespace Richman11DiceSelector
         {
             GUILayout.Label("Enabled: " + (pluginEnabled ? "Yes" : "No"));
             GUILayout.Label("Next dice point: " + (pendingPoint == 0 ? "None" : pendingPoint.ToString()));
-            GUILayout.Label("Press 1-6 to set next point, 0 to clear.");
+            GUILayout.Label("Speed: " + (speedEnabled ? "On" : "Off") + " x" + FormatSpeed(speedMultiplier));
+            GUILayout.Label("F1-F6 set next point, ` clears.");
+            GUILayout.Label("F7/F8 speed down/up, F9 toggles speed.");
+            GUILayout.Label("F10 shows/hides this window.");
             GUI.DragWindow();
         }
 
@@ -228,6 +264,25 @@ namespace Richman11DiceSelector
             if (value < 1) return 1;
             if (value > 6) return 6;
             return value;
+        }
+
+        private static void SetSpeed(float value)
+        {
+            speedMultiplier = Mathf.Clamp(value, 1f, 3f);
+            ApplySpeedScale();
+            LogRef.LogInfo("Speed multiplier set to x" + FormatSpeed(speedMultiplier) + "; boost is " + (speedEnabled ? "on" : "off") + ".");
+        }
+
+        private static void ApplySpeedScale()
+        {
+            float scale = speedEnabled ? speedMultiplier : 1f;
+            Time.timeScale = scale;
+            Time.fixedDeltaTime = originalFixedDeltaTime * scale;
+        }
+
+        private static string FormatSpeed(float value)
+        {
+            return value.ToString("0.##");
         }
 
         private static void ClearPending(string reason)
