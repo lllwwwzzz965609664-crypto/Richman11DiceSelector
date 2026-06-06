@@ -7,7 +7,7 @@ Richman11DiceSelector
 
 安装：
 把 Richman11DiceSelector.dll 放到：
-D:\Steam\steamapps\common\Richman11\BepInEx\plugins
+\Steam\steamapps\common\Richman11\BepInEx\plugins
 
 使用：
 1. 进入本地单机游戏。
@@ -22,4 +22,4 @@ D:\Steam\steamapps\common\Richman11\BepInEx\plugins
 
 日志：
 BepInEx\LogOutput.log 会记录插件加载、hook 方法、用户设置的点数、实际覆盖的点数。
-如果无效，请把 D:\Steam\steamapps\common\Richman11\BepInEx\LogOutput.log 发回来继续分析。
+如果无效，请把 \Steam\steamapps\common\Richman11\BepInEx\LogOutput.log 发回来继续分析。
