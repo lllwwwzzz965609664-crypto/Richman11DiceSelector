@@ -20,6 +20,4 @@ Richman11DiceSelector
 插件 hook 的是 BattleBase.GetDice(int staff, ref List<int> ortList)，也就是普通骰子路径生成逻辑。
 它不会 hook DelCard，不会拦截卡牌删除，不会 hook 人物每一步移动、剩余步数递减或事件结算。
 
-日志：
-BepInEx\LogOutput.log 会记录插件加载、hook 方法、用户设置的点数、实际覆盖的点数。
-如果无效，请把 \Steam\steamapps\common\Richman11\BepInEx\LogOutput.log 发回来继续分析。
+
